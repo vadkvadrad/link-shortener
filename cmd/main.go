@@ -13,7 +13,7 @@ import (
 	"net/http"
 )
 
-func main() {
+func App() http.Handler {
 	conf := configs.Load()
 	db := db.NewDb(conf)
 	router := http.NewServeMux()
@@ -46,20 +46,26 @@ func main() {
 		Config: conf,
 	})
 
+	// listening for statistic
+	go statService.AddClick()
+
 	// Middlewares
 	stack := middleware.Chain(
 		middleware.CORS,
 		middleware.Logging,
 	)
 
+	return stack(router)
+}
+
+func main() {
+	app := App()
+
 	// creating server
 	server := http.Server{
 		Addr: ":8081",
-		Handler: stack(router),
+		Handler: app,
 	}
-
-	// listening for statistic
-	go statService.AddClick()
 
 	// service start
 	fmt.Println("service started on port", server.Addr)
