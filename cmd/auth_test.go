@@ -36,6 +36,24 @@ func TestLoginSuccess(t *testing.T) {
 		t.Fatal(err)
 	}
 	if resData.Token == "" {
-		t.Fatal("expected token, got ", resData.Token)
+		t.Fatal("token empty")
+	}
+}
+
+func TestLoginFailed(t *testing.T) {
+	ts := httptest.NewServer(App())
+	defer ts.Close()
+
+	data, _ := json.Marshal(&auth.LoginRequest{
+		Email: "va@ya.ru",
+		Password: "12345",
+	})
+
+	res, err := http.Post(ts.URL + "/auth/login", "application/json", bytes.NewReader(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.StatusCode != 401 {
+		t.Fatalf("expected %d, got %d", 401, res.StatusCode)
 	}
 }
