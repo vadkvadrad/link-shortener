@@ -13,6 +13,20 @@ import (
 	"net/http"
 )
 
+func main() {
+	app := App()
+
+	// creating server
+	server := http.Server{
+		Addr: ":8081",
+		Handler: app,
+	}
+
+	// service start
+	fmt.Println("service started on port", server.Addr)
+	server.ListenAndServe()
+}
+
 func App() http.Handler {
 	conf := configs.Load()
 	db := db.NewDb(conf)
@@ -56,18 +70,4 @@ func App() http.Handler {
 	)
 
 	return stack(router)
-}
-
-func main() {
-	app := App()
-
-	// creating server
-	server := http.Server{
-		Addr: ":8081",
-		Handler: app,
-	}
-
-	// service start
-	fmt.Println("service started on port", server.Addr)
-	server.ListenAndServe()
 }
