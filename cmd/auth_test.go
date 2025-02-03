@@ -2,6 +2,7 @@ package main
 
 import (
 	"adv-go/api/internal/auth"
+	"adv-go/api/internal/user"
 	"bytes"
 	"encoding/json"
 	"io"
@@ -16,7 +17,7 @@ import (
 )
 
 func initDb() *gorm.DB {
-	err := godotenv.Load("cmd/.env")
+	err := godotenv.Load(".env")
 	if err != nil {
 		panic(err)
 	}
@@ -28,15 +29,30 @@ func initDb() *gorm.DB {
 	return db
 }
 
+func initData(db *gorm.DB) {
+	db.Create(&user.User{
+		Email: "a1@a.ru",
+		Password: "$2a$10$ruTbXRDNF9.ulyWTp1weUOl8W4WLyGYI6eehUe9gY6fyO8NYhebGe",
+		Name: "test user 1",
+	})
+}
+
+func removeData(db *gorm.DB) {
+	db.Unscoped(). 
+		Where("email = ?", "a1@a.ru"). 
+		Delete(&user.User{})
+}
+
 func TestLoginSuccess(t *testing.T) {
 	// Prepare
 	db := initDb()
-	
+	initData(db)
+
 	ts := httptest.NewServer(App())
 	defer ts.Close()
 
 	data, _ := json.Marshal(&auth.LoginRequest{
-		Email: "va@ya.ru",
+		Email: "a1@a.ru",
 		Password: "1234",
 	})
 
@@ -59,14 +75,20 @@ func TestLoginSuccess(t *testing.T) {
 	if resData.Token == "" {
 		t.Fatal("token empty")
 	}
+
+	// Tear down
+	removeData(db)
 }
 
 func TestLoginFailed(t *testing.T) {
+	db := initDb()
+	initData(db)
+
 	ts := httptest.NewServer(App())
 	defer ts.Close()
 
 	data, _ := json.Marshal(&auth.LoginRequest{
-		Email: "va@ya.ru",
+		Email: "a1@a.ru",
 		Password: "12345",
 	})
 
@@ -77,4 +99,6 @@ func TestLoginFailed(t *testing.T) {
 	if res.StatusCode != 401 {
 		t.Fatalf("expected %d, got %d", 401, res.StatusCode)
 	}
+
+	removeData(db)
 }
