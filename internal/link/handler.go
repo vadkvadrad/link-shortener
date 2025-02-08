@@ -31,7 +31,7 @@ func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) {
 	}
 	router.Handle("POST /link", middleware.IsAuthed(handler.Create(), deps.Config))
 	router.Handle("PATCH /link/{id}", middleware.IsAuthed(handler.Update(), deps.Config))
-	router.Handle("DELETE /link/{id}", middleware.IsAuthed(handler.Create(), deps.Config))
+	router.Handle("DELETE /link/{id}", middleware.IsAuthed(handler.Delete(), deps.Config))
 	router.HandleFunc("GET /{hash}", handler.GoTo())
 	router.Handle("GET /link", middleware.IsAuthed(handler.GetAll(), deps.Config))
 }
